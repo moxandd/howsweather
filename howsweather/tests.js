@@ -3,13 +3,9 @@ const axios = require("axios");
 WEATHER_API_KEY = "9bd13e4f6369f626dcdb6a5ff8a7377f";
 WEATHER_API_KEY2 = "dfbbc4e147be301a4dc626c337a2cb34";
 
-const cityName = "Voronezh";
-const limit = 1;
-const countryCode = "RU";
+const getCoords = async (cityName, countryCode, api_key, limit = 1) => {
+  const cityApiUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${cityName},${countryCode}&limit=${limit}&appid=${api_key}`;
 
-const cityApiUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${cityName},${countryCode}&limit=${limit}&appid=${WEATHER_API_KEY}`;
-
-const getCoords = async () => {
   try {
     const response = await axios.get(cityApiUrl);
     const result = response.data[0];
@@ -50,7 +46,7 @@ const parseWeatherData = async (weatherData) => {
 const makeApiCalls = async () => {
   try {
     // 1. Получаем координаты города
-    const [lat, lon] = await getCoords();
+    const [lat, lon] = await getCoords("Oskol", "RU", WEATHER_API_KEY);
     console.log("Успешно получены координаты:", lat, lon);
 
     // 2. Получаем данные о погоде по координатам
