@@ -35,8 +35,9 @@ const parseWeatherData = async (weatherData) => {
   try {
     const mainWeather = weatherData["weather"][0]["main"];
     const weatherDescription = weatherData["weather"][0]["description"];
+    const temperature = parseInt(weatherData["main"]["temp"] - 273);
 
-    return [mainWeather, weatherDescription];
+    return [mainWeather, weatherDescription, temperature];
   } catch (error) {
     console.error("Ошибка при получении координат:", error);
     throw error;

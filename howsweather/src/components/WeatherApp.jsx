@@ -37,11 +37,61 @@ const WeatherApp = () => {
     }
   };
 
+  const convertToLocalTime = (timestamp, timezoneOffset) => {
+    // Преобразуем метку времени (timestamp) в объект Date в UTC (timestamp уже в секундах)
+    const date = new Date(timestamp * 1000); // Переводим в миллисекунды
+
+    // Получаем часы и минуты в UTC
+    const utcHours = date.getUTCHours(); // Часы в UTC
+    const utcMinutes = date.getUTCMinutes(); // Минуты в UTC
+
+    // Теперь добавляем смещение по времени
+    const localHours = utcHours + Math.floor(timezoneOffset / 3600); // переводим смещение из секунд в часы
+    const localMinutes = utcMinutes + Math.floor((timezoneOffset % 3600) / 60); // минуты
+    const localDate = new Date(date.setHours(localHours, localMinutes));
+
+    // Форматируем время в формат HH:MM
+    const formattedTime = `${localDate
+      .getHours()
+      .toString()
+      .padStart(2, "0")}:${localDate.getMinutes().toString().padStart(2, "0")}`;
+
+    return formattedTime;
+  };
+
   // Функция для парсинга данных о погоде
   const parseWeatherData = (weatherData) => {
     const mainWeather = weatherData.weather[0].main;
     const weatherDescription = weatherData.weather[0].description;
-    return [mainWeather, weatherDescription];
+    const temperature = parseInt(weatherData["main"]["temp"] - 273);
+    const feelsLike = parseInt(weatherData["main"]["feels_like"] - 273);
+    const pressure = weatherData["main"]["pressure"];
+    const humidity = weatherData["main"]["humidity"];
+    const windSpeed = weatherData["wind"]["speed"];
+    const timezone = convertToLocalTime(
+      weatherData["dt"],
+      weatherData["timezone"]
+    );
+    const sunrise = convertToLocalTime(
+      weatherData["sys"]["sunrise"],
+      weatherData["timezone"]
+    );
+    const sunset = convertToLocalTime(
+      weatherData["sys"]["sunset"],
+      weatherData["timezone"]
+    );
+    return [
+      mainWeather,
+      weatherDescription,
+      temperature,
+      feelsLike,
+      pressure,
+      humidity,
+      windSpeed,
+      timezone,
+      sunrise,
+      sunset,
+    ];
   };
 
   // Обработчик отправки формы
@@ -101,15 +151,23 @@ const WeatherApp = () => {
 
       {/* Погода */}
       {weatherData ? (
-        <div className="pt-[2rem]">
+        <div className="pt-[2rem] lg:text-[1.5rem]">
           <h2>
             Погода в <span className="font-bold">{city}</span>:
           </h2>
           <p>Состояние: {weatherData[0]}</p>
           <p>Описание: {weatherData[1]}</p>
+          <p>Температура: {weatherData[2]}°C</p>
+          <p>Ощущается как: {weatherData[3]}°C</p>
+          <p>Атмосферное давление: {weatherData[4]}</p>
+          <p>Влажность: {weatherData[5]}%</p>
+          <p>Ветер: {weatherData[6]}м/c</p>
+          <p>Время: {weatherData[7]}</p>
+          <p>Восход солнца: {weatherData[8]}</p>
+          <p>Закат солнца: {weatherData[9]}</p>
         </div>
       ) : (
-        !loading && <p>Введите город, чтобы получить данные о погоде.</p>
+        !loading && <p>Введите город РФ, чтобы получить данные о погоде.</p>
       )}
     </div>
   );
