@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import debounce from "lodash.debounce";
+import gmailIcon from "../icons/gmail-logo.svg";
+import telegramIcon from "../icons/telegram-logo.svg";
+import vkIcon from "../icons/vk-logo.svg";
 
 const WeatherApp = () => {
   const [query, setQuery] = useState(""); // Запрос пользователя
@@ -197,10 +200,39 @@ const WeatherApp = () => {
 
   return (
     <div>
-      <h1 className="text-3xl mb-[1.75rem] pt-[1.75rem]">HOWSWEATHER</h1>
+      <nav>
+        <a className="logo-link | inline-block" href="/">
+          <h1 className="text-4xl mb-[1.25rem] pt-[1.75rem] logo-font lg:text-5xl lg:mb-[1.75rem] font-bold">
+            HOWSWEATHER
+          </h1>
+        </a>
+        <div className="credentials-links-block | mt-[-1rem] mb-[1rem]">
+          <ul className="credentials-links | flex gap-[1rem] justify-center">
+            <a href="https://t.me/hellouHou">
+              <li className="credentials-item">
+                <img className="max-w-[24px]" src={telegramIcon} alt="" />
+              </li>
+            </a>
+            <a href="https://vk.com/dankgb">
+              <li className="credentials-item">
+                <img className="max-w-[24px]" src={vkIcon} alt="" />
+              </li>
+            </a>
+            <a href="mailto:danyakazakov96@gmail.com">
+              <li className="credentials-item">
+                <img className="max-w-[24px]" src={gmailIcon} alt="" />
+              </li>
+            </a>
+          </ul>
+        </div>
+      </nav>
 
       {/* Форма для ввода города */}
-      <form onSubmit={handleSubmit} onChange={handleInputChange}>
+      <form
+        className="text-gray-500 the-default-font default-container"
+        onSubmit={handleSubmit}
+        onChange={handleInputChange}
+      >
         <div className="input-flex-block | flex flex-col gap-[0.5rem]">
           <input
             className="min-h-[2.5rem] rounded-sm px-[0.75rem]"
@@ -212,7 +244,11 @@ const WeatherApp = () => {
           {suggestions.length > 0 && (
             <ul>
               {suggestions.map((city) => (
-                <li key={city.id} onClick={() => handleSuggestionSelect(city)}>
+                <li
+                  className="cursor-pointer"
+                  key={city.id}
+                  onClick={() => handleSuggestionSelect(city)}
+                >
                   {city.name}, {city.country}
                 </li>
               ))}
@@ -221,7 +257,7 @@ const WeatherApp = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#1BFC80] rounded-sm min-h-[2rem]"
+            className="bg-[#114b2a] rounded-sm min-h-[2rem] text-white"
           >
             {loading ? "Загружаем..." : "Ок"}
           </button>
@@ -233,7 +269,7 @@ const WeatherApp = () => {
 
       {/* Погода */}
       {weatherData ? (
-        <div className="pt-[2rem] lg:text-[1.5rem]">
+        <div className="the-default-font pt-[2rem] text-[1.1rem] lg:text-[1.5rem] default-container">
           <h2>
             Погода в{" "}
             <span className="font-bold">
@@ -241,19 +277,55 @@ const WeatherApp = () => {
             </span>
             :
           </h2>
-          <p>Состояние: {weatherData[0]}</p>
-          <p>Описание: {weatherData[1]}</p>
-          <p>Температура: {weatherData[2]}°C</p>
-          <p>Ощущается как: {weatherData[3]}°C</p>
-          <p>Атмосферное давление: {weatherData[4]}</p>
-          <p>Влажность: {weatherData[5]}%</p>
-          <p>Ветер: {weatherData[6]}м/c</p>
-          <p>Время: {weatherData[7]}</p>
-          <p>Восход солнца: {weatherData[8]}</p>
-          <p>Закат солнца: {weatherData[9]}</p>
+          <p>
+            Состояние:{" "}
+            <span className="underline text-green-400">{weatherData[0]}</span>
+          </p>
+          <p>
+            Описание:{" "}
+            <span className="underline text-green-400">{weatherData[1]}</span>
+          </p>
+          <p>
+            Температура:{" "}
+            <span className="underline text-green-400">{weatherData[2]}°C</span>
+          </p>
+          <p>
+            Ощущается как:{" "}
+            <span className="underline text-green-400">{weatherData[3]}°C</span>
+          </p>
+          <p>
+            Атмосферное давление:{" "}
+            <span className="underline text-green-400">{weatherData[4]}</span>
+          </p>
+          <p>
+            Влажность:{" "}
+            <span className="underline text-green-400">{weatherData[5]}%</span>
+          </p>
+          <p>
+            Ветер:{" "}
+            <span className="underline text-green-400">
+              {weatherData[6]}м/c
+            </span>
+          </p>
+          <p>
+            Время:{" "}
+            <span className="underline text-green-400">{weatherData[7]}</span>
+          </p>
+          <p>
+            Восход солнца:{" "}
+            <span className="underline text-green-400">{weatherData[8]}</span>
+          </p>
+          <p>
+            Закат солнца:{" "}
+            <span className="underline text-green-400">{weatherData[9]}</span>
+          </p>
         </div>
       ) : (
-        !loading && <p>Введите город РФ, чтобы получить данные о погоде.</p>
+        !loading && (
+          <p className="the-default-font mt-[1rem] default-container">
+            Введите название города, чтобы получить данные о погоде.
+          </p>
+        )
       )}
     </div>
   );
