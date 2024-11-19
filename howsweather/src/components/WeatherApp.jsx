@@ -1,22 +1,69 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import debounce from "lodash.debounce";
 
 const WeatherApp = () => {
+  const [query, setQuery] = useState(""); // Запрос пользователя
+  const [selectedCity, setSelectedCity] = useState(null); // Выбранный город
   const [city, setCity] = useState(""); // Состояние для хранения введённого города
+  const [lastSubmittedCity, setLastSubmittedCity] = useState([]); // Состояние для хранения последнего введённого города
   const [weatherData, setWeatherData] = useState(null); // Состояние для хранения данных о погоде
   const [loading, setLoading] = useState(false); // Состояние для индикатора загрузки
   const [error, setError] = useState(null); // Состояние для ошибок
+  const [suggestions, setSuggestions] = useState([]); // Состояние для автоподбора/угадывания названия города
 
   // API ключи
   const WEATHER_API_KEY = "9bd13e4f6369f626dcdb6a5ff8a7377f";
 
+  const fetchCitySuggestions = async (query) => {
+    if (query.length < 3) {
+      setSuggestions([]);
+      return; // Не делаем запрос, если ввод меньше 3 символов
+    }
+
+    console.log(`Fetching city suggestions on "${query}"...`);
+
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/find?q=${query}&type=like&cnt=5&appid=${WEATHER_API_KEY}`
+      );
+      const data = await response.json();
+
+      if (data.list && data.list.length > 0) {
+        const cities = data.list.map((city) => ({
+          name: city.name,
+          country: city.sys.country,
+          id: city.id,
+        }));
+        setSuggestions(cities);
+      } else {
+        setSuggestions([]);
+      }
+      console.log("Suggestions: ", suggestions);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+      setSuggestions([]);
+    }
+  };
+
+  const debouncedFetchCitySuggestions = debounce((query) => {
+    fetchCitySuggestions(query);
+  }, 500);
+
+  useEffect(() => {
+    if (query.length >= 3) {
+      debouncedFetchCitySuggestions(query);
+    }
+  }, [query]);
+
   // Функция для получения координат города
-  const getCoords = async (cityName, countryCode, api_key) => {
-    const cityApiUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${cityName},${countryCode}&limit=1&appid=${api_key}`;
+  const getCoords = async (cityName, countryCode, api_key, limit = 3) => {
+    const cityApiUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${cityName},${countryCode}&limit=${limit}&appid=${api_key}`;
 
     try {
       const response = await axios.get(cityApiUrl);
       const result = response.data[0];
+
       const lat = result.lat;
       const lon = result.lon;
 
@@ -105,8 +152,19 @@ const WeatherApp = () => {
 
     try {
       // 1. Получаем координаты города
-      const [lat, lon] = await getCoords(city, "RU", WEATHER_API_KEY);
+
+      console.log(
+        `Calling getCoords with arguments (${city}, ${selectedCity.country}, ${WEATHER_API_KEY})`
+      );
+
+      const [lat, lon] = await getCoords(
+        selectedCity.name,
+        selectedCity.country,
+        WEATHER_API_KEY
+      );
       console.log("Успешно получены координаты:", lat, lon);
+
+      setLastSubmittedCity([city, selectedCity.country]);
 
       // 2. Получаем данные о погоде по координатам
       const weatherData = await getWeatherData(lat, lon);
@@ -122,12 +180,27 @@ const WeatherApp = () => {
     }
   };
 
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    if (value.length == 0) setSuggestions([]);
+    setQuery(value);
+    // debouncedFetchCitySuggestions(value); // Вызываем дебаунсированную функцию
+  };
+
+  const handleSuggestionSelect = (city) => {
+    // Вместо строки сохраняем весь объект города
+    setSelectedCity(city);
+    setCity(`${city.name}`); // Обновляем строку для отображения в поле
+    setSuggestions([]); // Очистка предложений после выбора
+    console.log(`Selected city: ${city.name}, ${city.country}`); // Логируем выбранный город
+  };
+
   return (
     <div>
       <h1 className="text-3xl mb-[1.75rem] pt-[1.75rem]">HOWSWEATHER</h1>
 
       {/* Форма для ввода города */}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} onChange={handleInputChange}>
         <div className="input-flex-block | flex flex-col gap-[0.5rem]">
           <input
             className="min-h-[2.5rem] rounded-sm px-[0.75rem]"
@@ -136,6 +209,15 @@ const WeatherApp = () => {
             onChange={(e) => setCity(e.target.value)}
             placeholder="Введите город"
           />
+          {suggestions.length > 0 && (
+            <ul>
+              {suggestions.map((city) => (
+                <li key={city.id} onClick={() => handleSuggestionSelect(city)}>
+                  {city.name}, {city.country}
+                </li>
+              ))}
+            </ul>
+          )}
           <button
             type="submit"
             disabled={loading}
@@ -153,7 +235,11 @@ const WeatherApp = () => {
       {weatherData ? (
         <div className="pt-[2rem] lg:text-[1.5rem]">
           <h2>
-            Погода в <span className="font-bold">{city}</span>:
+            Погода в{" "}
+            <span className="font-bold">
+              {lastSubmittedCity[0]}, {lastSubmittedCity[1]}
+            </span>
+            :
           </h2>
           <p>Состояние: {weatherData[0]}</p>
           <p>Описание: {weatherData[1]}</p>

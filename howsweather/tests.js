@@ -31,6 +31,7 @@ const getWeatherData = async (lat, lon) => {
     throw error;
   }
 };
+
 const parseWeatherData = async (weatherData) => {
   try {
     const mainWeather = weatherData["weather"][0]["main"];
